@@ -4,7 +4,11 @@ extern crate serde_xml_rs;
 use self::serde::{de, Deserialize, Deserializer};
 use self::serde_xml_rs::deserialize;
 
+use std::io::BufReader;
+use std::fs::File;
 use std::str::FromStr;
+
+use std::path::Path;
 
 
 #[derive(Debug, Deserialize)]
@@ -51,15 +55,19 @@ pub struct OsmWay {
 #[derive(Debug, Deserialize)]
 pub struct Osm {
     #[serde(rename = "node", default)]
-    nodes: Vec<OsmNode>,
-
+    pub nodes: Vec<OsmNode>,
     #[serde(rename = "way", default)]
-    ways: Vec<OsmWay>,
+    pub ways: Vec<OsmWay>,
 }
 
 
-pub fn read_osm_extract(_file_name: &str) -> Osm {
-    Osm {nodes: Vec::new(), ways: Vec::new()}
+pub fn read_osm_extract(file_name: &str) -> Result<Osm, Box<::std::error::Error>>  {
+    let f = File::open(file_name)?;
+    let reader = BufReader::new(&f);
+    match deserialize(reader) {
+        Ok(osm) => Ok(osm),
+        Err(e) => Err(From::from(format!("{:?}", e)))
+    }
 }
 
 
@@ -135,5 +143,19 @@ mod tests {
         let osm: Osm = deserialize(s.as_bytes()).unwrap();
         assert_eq!(2, osm.nodes.len());
         assert_eq!(1, osm.ways.len());
+    }
+
+    #[test]
+    fn test_read_osm_extract() {
+        let fixture_path = Path::new("tests").join("fixtures").join("test.osm");
+        let osm = read_osm_extract(fixture_path.to_str().unwrap()).unwrap();
+        assert_eq!(2, osm.nodes.len());
+        assert_eq!(1, osm.ways.len());
+    }
+
+    #[test]
+    fn test_missing_file() {
+        let osm = read_osm_extract("not a file path");
+        assert!(osm.is_err());
     }
 }

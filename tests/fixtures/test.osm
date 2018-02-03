@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="pbf2osm">
+    <node id="470552" lat="49.3413853" lon="7.3014897"/>
+    <node id="470553" lat="49.3407084" lon="7.3006280"/>
+    <way id="26659127" visible="true">
+        <nd ref="470552"/>
+        <nd ref="470553"/>
+    </way>
+</osm>
