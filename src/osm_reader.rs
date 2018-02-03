@@ -8,7 +8,80 @@ use std::io::BufReader;
 use std::fs::File;
 use std::str::FromStr;
 
-use std::path::Path;
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum HighwayType {
+    Motorway,
+    Trunk,
+    Primary,
+    Secondary,
+    Tertiary,
+    MotorwayLink,
+    TrunkLink,
+    PrimaryLink,
+    SecondaryLink,
+    TertiaryLink,
+    Road,
+    Unclassified,
+    Residential,
+    Unsurfaced,
+    LivingStreet,
+    Service,
+}
+
+
+impl HighwayType {
+
+    pub fn from_str(s: &str) -> Option<Self> {
+        use self::HighwayType::*;
+        match s {
+            "motorway" => Some(Motorway),
+            "trunk" => Some(Trunk),
+            "primary" => Some(Primary),
+            "secondary" => Some(Secondary),
+            "tertiary" => Some(Tertiary),
+            "motorway_link" => Some(MotorwayLink),
+            "trunk_link" => Some(TrunkLink),
+            "primary_link" => Some(PrimaryLink),
+            "secondary_link" => Some(SecondaryLink),
+            "tertiary_link" => Some(TertiaryLink),
+            "road" => Some(Road),
+            "unclassified" => Some(Unclassified),
+            "residential" => Some(Residential),
+            "unsurfaced" => Some(Unsurfaced),
+            "living_street" => Some(LivingStreet),
+            "service" => Some(Service),
+            _ => None
+        }
+    }
+
+    pub fn speed_ms(&self) -> f64 {
+        use self::HighwayType::*;
+        let speed_kmh = match *self {
+            Motorway => 110.0,
+            Trunk => 110.0,
+            Primary => 70.0,
+            Secondary => 60.0,
+            Tertiary => 50.0,
+            MotorwayLink => 50.0,
+            TrunkLink => 50.0,
+            PrimaryLink => 50.0,
+            SecondaryLink => 50.0,
+            TertiaryLink => 50.0,
+            Road => 40.0,
+            Unclassified => 40.0,
+            Residential => 30.0,
+            Unsurfaced => 30.0,
+            LivingStreet => 10.0,
+            Service => 10.0,
+        };
+        kmh_to_ms(speed_kmh)
+    }
+}
+
+fn kmh_to_ms(speed_in_kmh: f64) -> f64 {
+    speed_in_kmh / 3.6
+}
 
 
 #[derive(Debug, Deserialize)]
@@ -52,6 +125,19 @@ pub struct OsmWay {
 }
 
 
+impl OsmWay {
+
+    pub fn highway_type(&self) -> Option<HighwayType> {
+        for tag in self.tags.iter() {
+            if tag.key == "highway" {
+                return HighwayType::from_str(&tag.value)
+            }
+        }
+        None
+    }
+}
+
+
 #[derive(Debug, Deserialize)]
 pub struct Osm {
     #[serde(rename = "node", default)]
@@ -92,6 +178,8 @@ fn de_f64_from_str<'de, D>(deserializer: D) -> Result<f64, D::Error>
 mod tests {
     use osm_reader::*;
 
+    use std::path::Path;
+
     #[test]
     fn test_read_node() {
         let s = r##"
@@ -124,6 +212,8 @@ mod tests {
         let tag = &osm_way.tags[0];
         assert_eq!("name", tag.key);
         assert_eq!("Pastower Straße", tag.value);
+
+        assert_eq!(HighwayType::Unclassified, osm_way.highway_type().unwrap());
     }
 
     #[test]
@@ -146,7 +236,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_osm_extract() {
+    fn test_read_osm_extract_file() {
         let fixture_path = Path::new("tests").join("fixtures").join("test.osm");
         let osm = read_osm_extract(fixture_path.to_str().unwrap()).unwrap();
         assert_eq!(2, osm.nodes.len());
