@@ -128,9 +128,19 @@ pub struct OsmWay {
 impl OsmWay {
 
     pub fn highway_type(&self) -> Option<HighwayType> {
+        self.get_tag_value("highway")
+            .and_then(|tag_value| HighwayType::from_str(&tag_value))
+    }
+
+    pub fn is_oneway(&self) -> bool {
+        self.get_tag_value("oneway")
+            .map_or(false, |value| value == "yes")
+    }
+
+    fn get_tag_value(&self, key: &str) -> Option<&str> {
         for tag in self.tags.iter() {
-            if tag.key == "highway" {
-                return HighwayType::from_str(&tag.value)
+            if tag.key == key {
+                return Some(&tag.value);
             }
         }
         None
@@ -214,6 +224,7 @@ mod tests {
         assert_eq!("Pastower Straße", tag.value);
 
         assert_eq!(HighwayType::Unclassified, osm_way.highway_type().unwrap());
+        assert_eq!(false, osm_way.is_oneway());
     }
 
     #[test]
