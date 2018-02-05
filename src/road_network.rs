@@ -1,6 +1,6 @@
 extern crate geo;
 
-use self::geo::Point;
+use geo_utils::Location;
 
 use std::collections::HashMap;
 use std::error::Error;
@@ -11,12 +11,12 @@ type Cost = u64;
 pub struct Node {
     pub id: NodeIndex,
     pub neighbours: Vec<Edge>,
-    pub point: Point<f64>,
+    pub location: Location,
 }
 
 impl Node {
-    pub fn new(id: NodeIndex, point: Point<f64>) -> Self {
-        Node {id, point, neighbours: Vec::new() }
+    pub fn new(id: NodeIndex, location: Location) -> Self {
+        Node {id, location, neighbours: Vec::new() }
     }
 }
 
@@ -77,8 +77,22 @@ impl RoadNetwork {
         self.nodes.get_mut(&node_id)
     }
 
+
     pub fn get_node(&self, node_id: NodeIndex) -> Option<&Node> {
         self.nodes.get(&node_id)
+    }
+
+
+    pub fn remove_unused_nodes(&mut self) {
+        let nodes_to_remove: Vec<_> = self.nodes
+            .iter()
+            .filter(|&(_, ref node)| node.neighbours.is_empty())
+            .map(|(k, _)| k.clone())
+            .collect();
+
+        for node_id in nodes_to_remove {
+            self.nodes.remove(&node_id);
+        }
     }
 }
 
@@ -91,9 +105,9 @@ mod tests {
     fn test_construct_network() {
         let mut network = RoadNetwork::new();
 
-        network.add_node(Node::new(1, Point::new(0., 0.))).unwrap();
-        network.add_node(Node::new(2, Point::new(0., 0.))).unwrap();
-        network.add_node(Node::new(3, Point::new(0., 0.))).unwrap();
+        network.add_node(Node::new(1, Location::new(0., 0.))).unwrap();
+        network.add_node(Node::new(2, Location::new(0., 0.))).unwrap();
+        network.add_node(Node::new(3, Location::new(0., 0.))).unwrap();
 
         assert_eq!(3, network.num_nodes());
 
