@@ -88,7 +88,7 @@ fn kmh_to_ms(speed_in_kmh: f64) -> f64 {
 pub struct OsmNd {
     #[serde(deserialize_with = "de_u64_from_str")]
     #[serde(rename = "ref", default)]
-    ref_: u64,
+    pub ref_: u64,
 }
 
 
@@ -104,11 +104,11 @@ pub struct OsmTag {
 #[derive(Debug, Deserialize)]
 pub struct OsmNode {
     #[serde(deserialize_with = "de_u64_from_str")]
-    id: u64,
+    pub id: u64,
     #[serde(deserialize_with = "de_f64_from_str")]
-    lat: f64,
+    pub lat: f64,
     #[serde(deserialize_with = "de_f64_from_str")]
-    lon: f64,
+    pub lon: f64,
 }
 
 
@@ -118,7 +118,7 @@ pub struct OsmWay {
     id: u64,
 
     #[serde(rename = "nd", default)]
-    nodes: Vec<OsmNd>,
+    pub nodes: Vec<OsmNd>,
 
     #[serde(rename = "tag", default)]
     tags: Vec<OsmTag>,
