@@ -74,16 +74,13 @@ pub fn shortest_path(network: &RoadNetwork,
 
 fn trace_path(previous_nodes: HashMap<NodeIndex, Option<NodeIndex>>,
               end_node: NodeIndex) -> Vec<NodeIndex> {
-    let mut path = vec![end_node];
+    let mut path = Vec::new();
     let mut current_node = Some(end_node);
 
     // TODO (Simon): There should be a nicer way of writing this.
-    loop {
+    while current_node.is_some() {
         path.push(current_node.unwrap());
         current_node = *previous_nodes.get(&current_node.unwrap()).unwrap();
-        if current_node.is_none() {
-            break;
-        }
     }
 
     path.reverse();
