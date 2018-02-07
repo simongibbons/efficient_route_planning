@@ -1,6 +1,6 @@
 use road_network::{Cost, RoadNetwork, Node, NodeIndex};
 
-use std::collections::{BinaryHeap, HashSet};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::cmp::Ordering;
 
 
@@ -34,12 +34,13 @@ pub struct ShortestPath {
 }
 
 
-pub fn shortest_path_length(network: &RoadNetwork,
+pub fn shortest_path(network: &RoadNetwork,
                      start_node: &Node,
                      end_node: &Node) -> Option<ShortestPath> {
 
     let mut heap = BinaryHeap::new();
     let mut visited = HashSet::new();
+    let mut previous_nodes = HashMap::new();
 
     heap.push(HeapEl {cost: 0, node_index: start_node.id, previous_node_index: None});
 
@@ -48,9 +49,13 @@ pub fn shortest_path_length(network: &RoadNetwork,
             continue;
         }
         visited.insert(el.node_index);
+        previous_nodes.insert(el.node_index, el.previous_node_index);
 
         if el.node_index == end_node.id {
-            return Some(ShortestPath {cost: el.cost, path: Vec::new()});
+            return Some(ShortestPath {
+                cost: el.cost,
+                path: trace_path(previous_nodes, end_node.id)
+            });
         }
 
         let node = network.get_node(el.node_index).unwrap();
@@ -64,6 +69,25 @@ pub fn shortest_path_length(network: &RoadNetwork,
     }
 
     None
+}
+
+
+fn trace_path(previous_nodes: HashMap<NodeIndex, Option<NodeIndex>>,
+              end_node: NodeIndex) -> Vec<NodeIndex> {
+    let mut path = vec![end_node];
+    let mut current_node = Some(end_node);
+
+    // TODO (Simon): There should be a nicer way of writing this.
+    loop {
+        path.push(current_node.unwrap());
+        current_node = *previous_nodes.get(&current_node.unwrap()).unwrap();
+        if current_node.is_none() {
+            break;
+        }
+    }
+
+    path.reverse();
+    path
 }
 
 
@@ -113,7 +137,10 @@ mod tests {
     fn test_route_to_same_node() {
         let network = get_test_network();
         let node = network.get_node(1).unwrap();
-        assert_eq!(0, shortest_path_length(&network, &node, &node).unwrap().cost);
+
+        let result = shortest_path(&network, &node, &node).unwrap();
+        assert_eq!(0, result.cost);
+        assert_eq!(vec![1], result.path);
     }
 
 
@@ -122,7 +149,7 @@ mod tests {
         let network = get_test_network();
         let start = network.get_node(5).unwrap();
         let end = network.get_node(1).unwrap();
-        assert_eq!(None, shortest_path_length(&network, start, end));
+        assert_eq!(None, shortest_path(&network, start, end));
     }
 
 
@@ -131,6 +158,9 @@ mod tests {
         let network = get_test_network();
         let start = network.get_node(1).unwrap();
         let end = network.get_node(4).unwrap();
-        assert_eq!(35, shortest_path_length(&network, start, end).unwrap().cost);
+
+        let result = shortest_path(&network, start, end).unwrap();
+        assert_eq!(35, result.cost);
+        assert_eq!(vec![1, 2, 3, 4], result.path);
     }
 }
