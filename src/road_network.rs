@@ -5,8 +5,8 @@ use geo_utils::Location;
 use std::collections::HashMap;
 use std::error::Error;
 
-type NodeIndex = u64;
-type Cost = u64;
+pub type NodeIndex = u64;
+pub type Cost = u64;
 
 pub struct Node {
     pub id: NodeIndex,
