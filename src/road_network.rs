@@ -7,7 +7,7 @@ use std::collections::hash_map;
 use std::error::Error;
 
 pub type NodeIndex = u64;
-pub type NodesIterator<'a> = hash_map::Values<'a, NodeIndex, Node>;
+pub type NodesIterator<'a> = hash_map::Iter<'a, NodeIndex, Node>;
 pub type Cost = u64;
 
 pub struct Node {
@@ -92,14 +92,14 @@ impl RoadNetwork {
     /// Warning O(n) in the number of vertices.
     pub fn num_edges(&self) -> usize {
         self.nodes_iter()
-            .map(|node| node.out_degree())
+            .map(|(_, node)| node.out_degree())
             .sum()
     }
 
 
     pub fn num_reverse_edges(&self) -> usize {
         self.nodes_iter()
-            .map(|node| node.in_degree())
+            .map(|(_, node)| node.in_degree())
             .sum()
     }
 
@@ -127,7 +127,7 @@ impl RoadNetwork {
     }
 
     pub fn nodes_iter(& self) -> NodesIterator {
-        self.nodes.values()
+        self.nodes.iter()
     }
 }
 
