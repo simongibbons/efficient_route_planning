@@ -11,17 +11,32 @@ pub type Cost = u64;
 pub struct Node {
     pub id: NodeIndex,
     pub neighbours: Vec<Edge>,
+    pub reverse_neighbours: Vec<ReverseEdge>,
     pub location: Location,
 }
 
 impl Node {
     pub fn new(id: NodeIndex, location: Location) -> Self {
-        Node {id, location, neighbours: Vec::new() }
+        Node {id, location, neighbours: Vec::new(), reverse_neighbours: Vec::new()}
+    }
+
+    pub fn out_degree(&self) -> usize {
+        self.neighbours.len()
+    }
+
+    pub fn in_degree(&self) -> usize {
+        self.reverse_neighbours.len()
     }
 }
 
 pub struct Edge {
     pub destination: NodeIndex,
+    pub cost: Cost
+}
+
+
+pub struct ReverseEdge {
+    pub origin: NodeIndex,
     pub cost: Cost
 }
 
@@ -51,9 +66,16 @@ impl RoadNetwork {
     /// Adds a directed edge to the graph
     ///
     /// TODO (Simon): Handle edges between nodes that don't exist already
-    pub fn add_edge(&mut self, from_node: NodeIndex, to_node: NodeIndex, cost: Cost) {
-        let from_node = self.get_node_mut(from_node).unwrap();
-        from_node.neighbours.push(Edge {destination: to_node, cost})
+    pub fn add_edge(&mut self, from_node_index: NodeIndex, to_node_index: NodeIndex, cost: Cost) {
+        {
+            let from_node = self.get_node_mut(from_node_index).unwrap();
+            from_node.neighbours.push(Edge { destination: to_node_index, cost });
+        }
+
+        {
+            let to_node = self.get_node_mut(to_node_index).unwrap();
+            to_node.reverse_neighbours.push(ReverseEdge { origin: from_node_index, cost });
+        }
     }
 
 
@@ -68,7 +90,14 @@ impl RoadNetwork {
     /// Warning O(n) in the number of vertices.
     pub fn num_edges(&self) -> usize {
         self.nodes.iter()
-            .map(|(_, node)| node.neighbours.len())
+            .map(|(_, node)| node.out_degree())
+            .sum()
+    }
+
+
+    pub fn num_reverse_edges(&self) -> usize {
+        self.nodes.iter()
+            .map(|(_, node)| node.in_degree())
             .sum()
     }
 
@@ -117,5 +146,6 @@ mod tests {
         network.add_edge(1, 3, 10);
 
         assert_eq!(4, network.num_edges());
+        assert_eq!(4, network.num_reverse_edges());
     }
 }
