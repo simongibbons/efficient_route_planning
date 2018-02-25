@@ -46,8 +46,43 @@ fn nodes_in_order(network: &RoadNetwork) -> Vec<NodeIndex> {
 }
 
 
-/// TODO(Simon): Finish this function (see part 3 of https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm)
 fn assign_nodes_to_components(network: &RoadNetwork,
                               nodes_in_order: Vec<NodeIndex>) -> Vec<ConnectedComponent> {
-    
+    let mut assigned_nodes = HashSet::new();
+    let mut result = Vec::new();
+    for node_index in nodes_in_order.into_iter() {
+        if assigned_nodes.contains(&node_index) {
+            continue;
+        }
+        result.push(build_component(network, node_index, &mut assigned_nodes));
+    }
+    result
+}
+
+
+fn build_component(network: &RoadNetwork,
+                   root: NodeIndex,
+                   assigned_nodes: &mut HashSet<NodeIndex>) -> ConnectedComponent {
+
+    let mut component = ConnectedComponent::new();
+
+    fn assign(node_index: NodeIndex,
+              network: &RoadNetwork,
+              assigned_nodes: &mut HashSet<NodeIndex>,
+              component: &mut ConnectedComponent) {
+
+        if assigned_nodes.contains(&node_index) {
+            return;
+        }
+        assigned_nodes.insert(node_index);
+        component.push(node_index);
+
+        let node = network.get_node(node_index).unwrap();
+        for reverse_neighbour in node.reverse_neighbours.iter() {
+            assign(reverse_neighbour.origin, network, assigned_nodes, component);
+        }
+    }
+
+    assign(root, network, assigned_nodes, &mut component);
+    component
 }
