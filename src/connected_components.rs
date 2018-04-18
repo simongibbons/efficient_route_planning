@@ -84,5 +84,56 @@ fn build_component(network: &RoadNetwork,
     }
 
     assign(root, network, assigned_nodes, &mut component);
+    component.sort();
     component
+}
+
+
+#[cfg(test)]
+mod tests {
+    use connected_components::*;
+    use road_network::{Node, RoadNetwork};
+    use geo_utils::Location;
+
+
+    fn build_triangle_network() -> RoadNetwork {
+        let mut network = RoadNetwork::new();
+
+        network.add_node(Node::new(0, Location::new(0., 0.))).unwrap();
+        network.add_node(Node::new(1, Location::new(0., 0.))).unwrap();
+        network.add_node(Node::new(2, Location::new(0., 0.))).unwrap();
+
+        network.add_edge(0, 1, 10);
+        network.add_edge(1, 2, 10);
+        network.add_edge(2, 0, 10);
+
+        network
+    }
+
+    fn build_network_with_weakly_connected_node() -> RoadNetwork {
+        let mut network = build_triangle_network();
+        network.add_node(Node::new(99, Location::new(0., 0.))).unwrap();
+        network.add_edge(0, 99, 10);
+
+        network
+    }
+
+    #[test]
+    fn test_network_with_one_component() {
+        let network = build_triangle_network();
+        let components = strongly_connected_components(&network);
+
+        assert_eq!(1, components.len());
+        assert_eq!(vec![0, 1, 2], components[0]);
+    }
+
+    #[test]
+    fn test_network_with_weakly_connected_node() {
+        let network = build_network_with_weakly_connected_node();
+        let components = strongly_connected_components(&network);
+
+        assert_eq!(2, components.len());
+        assert!(components.contains(&vec![99]));
+        assert!(components.contains(&vec![0, 1, 2]));
+    }
 }
