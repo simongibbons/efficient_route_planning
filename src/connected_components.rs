@@ -65,25 +65,24 @@ fn build_component(network: &RoadNetwork,
                    assigned_nodes: &mut HashSet<NodeIndex>) -> ConnectedComponent {
 
     let mut component = ConnectedComponent::new();
+    if assigned_nodes.contains(&root) {
+        return component;
+    }
 
-    fn assign(node_index: NodeIndex,
-              network: &RoadNetwork,
-              assigned_nodes: &mut HashSet<NodeIndex>,
-              component: &mut ConnectedComponent) {
-
-        if assigned_nodes.contains(&node_index) {
-            return;
-        }
+    let mut stack = vec![root];
+    while stack.len() > 0 {
+        let node_index = stack.pop().unwrap();
         assigned_nodes.insert(node_index);
         component.push(node_index);
 
         let node = network.get_node(node_index).unwrap();
         for reverse_neighbour in node.reverse_neighbours.iter() {
-            assign(reverse_neighbour.origin, network, assigned_nodes, component);
+            if !assigned_nodes.contains(&reverse_neighbour.origin) {
+                stack.push(reverse_neighbour.origin);
+            }
         }
     }
 
-    assign(root, network, assigned_nodes, &mut component);
     component.sort();
     component
 }
