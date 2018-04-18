@@ -13,7 +13,7 @@ pub fn build_road_network_from_osm(osm: Osm) -> Result<RoadNetwork, Box<Error>> 
     let mut network = RoadNetwork::new();
     network = add_nodes_to_network(network, &osm.nodes)?;
     network = add_ways_to_network(network, &osm.ways)?;
-    network.remove_unused_nodes();
+    network.reduce_to_largest_strongly_connected_component();
     Ok(network)
 }
 

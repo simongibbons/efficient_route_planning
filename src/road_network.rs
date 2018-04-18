@@ -1,5 +1,6 @@
 extern crate geo;
 
+use connected_components::strongly_connected_components;
 use geo_utils::Location;
 
 use std::collections::HashMap;
@@ -122,6 +123,22 @@ impl RoadNetwork {
             .collect();
 
         for node_id in nodes_to_remove {
+            self.nodes.remove(&node_id);
+        }
+    }
+
+    pub fn reduce_to_largest_strongly_connected_component(&mut self) {
+        let mut components = strongly_connected_components(&self);
+        components.sort_by_key(|component| component.len());
+
+        let node_ids_to_remove: Vec<_> = components
+            .into_iter()
+            .rev()
+            .skip(1)
+            .flat_map(|x| x)
+            .collect();
+
+        for node_id in node_ids_to_remove {
             self.nodes.remove(&node_id);
         }
     }
