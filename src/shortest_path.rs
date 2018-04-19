@@ -7,6 +7,7 @@ use std::cmp::Ordering;
 #[derive(Debug, Default, Eq, PartialEq)]
 struct HeapEl {
     cost: Cost,
+    potential: Cost,
     node_index: NodeIndex,
     previous_node_index: Option<NodeIndex>,
 }
@@ -15,7 +16,7 @@ struct HeapEl {
 impl Ord for HeapEl {
     fn cmp(&self, other: &HeapEl) -> Ordering {
         // Flip the order of comparisons to turn the heap into a min-heap
-        other.cost.cmp(&self.cost)
+        other.potential.cmp(&self.potential)
     }
 }
 
@@ -34,15 +35,25 @@ pub struct ShortestPath {
 }
 
 
-pub fn shortest_path(network: &RoadNetwork,
+pub fn dijkstra_shortest_path(network: &RoadNetwork,
+                              start_node: &Node,
+                              end_node: &Node,
+) -> Option<ShortestPath> {
+    shortest_path(network, start_node, end_node, |_n1, _n2| 0)
+}
+
+
+fn shortest_path(network: &RoadNetwork,
                      start_node: &Node,
-                     end_node: &Node) -> Option<ShortestPath> {
+                     end_node: &Node,
+                     potential: fn(&Node, &Node) -> Cost,
+) -> Option<ShortestPath> {
 
     let mut heap = BinaryHeap::new();
     let mut visited = HashSet::new();
     let mut previous_nodes = HashMap::new();
 
-    heap.push(HeapEl {cost: 0, node_index: start_node.id, previous_node_index: None});
+    heap.push(HeapEl {cost: 0, potential: 0, node_index: start_node.id, previous_node_index: None});
 
     while let Some(el) = heap.pop() {
         if visited.contains(&el.node_index) {
@@ -60,8 +71,12 @@ pub fn shortest_path(network: &RoadNetwork,
 
         let node = network.get_node(el.node_index).unwrap();
         for neighbour in node.neighbours.iter() {
+            let cost = el.cost + neighbour.cost;
+            let neighbour_node = network.get_node(neighbour.destination).unwrap();
+
             heap.push(HeapEl {
-                cost: el.cost + neighbour.cost,
+                cost,
+                potential: cost + potential(neighbour_node, end_node),
                 node_index: neighbour.destination,
                 previous_node_index: Some(el.node_index),
             });
@@ -116,9 +131,9 @@ mod tests {
     fn test_heap() {
         let mut heap = BinaryHeap::new();
 
-        heap.push(HeapEl { node_index: 1, cost: 10, previous_node_index: None });
-        heap.push(HeapEl { node_index: 2, cost: 0, previous_node_index: None } );
-        heap.push(HeapEl { node_index: 3, cost: 100, previous_node_index: None });
+        heap.push(HeapEl { node_index: 1, potential: 10, cost: 1, previous_node_index: None });
+        heap.push(HeapEl { node_index: 2, potential: 0, cost: 1, previous_node_index: None } );
+        heap.push(HeapEl { node_index: 3, potential: 100, cost: 1, previous_node_index: None });
 
         assert_eq!(3, heap.len());
         assert_eq!(2, heap.pop().unwrap().node_index);
@@ -135,7 +150,7 @@ mod tests {
         let network = get_test_network();
         let node = network.get_node(1).unwrap();
 
-        let result = shortest_path(&network, &node, &node).unwrap();
+        let result = dijkstra_shortest_path(&network, &node, &node).unwrap();
         assert_eq!(0, result.cost);
         assert_eq!(vec![1], result.path);
     }
@@ -146,7 +161,7 @@ mod tests {
         let network = get_test_network();
         let start = network.get_node(5).unwrap();
         let end = network.get_node(1).unwrap();
-        assert_eq!(None, shortest_path(&network, start, end));
+        assert_eq!(None, dijkstra_shortest_path(&network, start, end));
     }
 
 
@@ -156,7 +171,7 @@ mod tests {
         let start = network.get_node(1).unwrap();
         let end = network.get_node(4).unwrap();
 
-        let result = shortest_path(&network, start, end).unwrap();
+        let result = dijkstra_shortest_path(&network, start, end).unwrap();
         assert_eq!(35, result.cost);
         assert_eq!(vec![1, 2, 3, 4], result.path);
     }
