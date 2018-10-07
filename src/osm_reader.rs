@@ -5,6 +5,7 @@ use self::serde::{de, Deserialize, Deserializer};
 use self::serde_xml_rs::deserialize;
 
 use std::io::BufReader;
+use std::fmt::Display;
 use std::fs::File;
 use std::str::FromStr;
 
@@ -83,7 +84,7 @@ fn kmh_to_ms(speed_in_kmh: f64) -> f64 {
 
 #[derive(Debug, Deserialize)]
 pub struct OsmNd {
-    #[serde(deserialize_with = "de_u64_from_str")]
+    #[serde(deserialize_with = "de_from_str")]
     #[serde(rename = "ref", default)]
     pub ref_: u64,
 }
@@ -100,18 +101,18 @@ pub struct OsmTag {
 
 #[derive(Debug, Deserialize)]
 pub struct OsmNode {
-    #[serde(deserialize_with = "de_u64_from_str")]
+    #[serde(deserialize_with = "de_from_str")]
     pub id: u64,
-    #[serde(deserialize_with = "de_f64_from_str")]
+    #[serde(deserialize_with = "de_from_str")]
     pub lat: f64,
-    #[serde(deserialize_with = "de_f64_from_str")]
+    #[serde(deserialize_with = "de_from_str")]
     pub lon: f64,
 }
 
 
 #[derive(Debug, Deserialize)]
 pub struct OsmWay {
-    #[serde(deserialize_with = "de_u64_from_str")]
+    #[serde(deserialize_with = "de_from_str")]
     id: u64,
 
     #[serde(rename = "nd", default)]
@@ -159,20 +160,11 @@ pub fn read_osm_extract(file_name: &str) -> Result<Osm, Box<::std::error::Error>
 }
 
 
-// TODO (Simon): Find a way to make these generic.
-fn de_u64_from_str<'de, D>(deserializer: D) -> Result<u64, D::Error>
-    where D: Deserializer<'de>
+fn de_from_str<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+    where D: Deserializer<'de>, T: FromStr, T::Err: Display
 {
     let s = <String>::deserialize(deserializer)?;
-    u64::from_str(&s).map_err(de::Error::custom)
-}
-
-
-fn de_f64_from_str<'de, D>(deserializer: D) -> Result<f64, D::Error>
-    where D: Deserializer<'de>
-{
-    let s = <String>::deserialize(deserializer)?;
-    f64::from_str(&s).map_err(de::Error::custom)
+    T::from_str(&s).map_err(de::Error::custom)
 }
 
 
