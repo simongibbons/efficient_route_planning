@@ -1,7 +1,7 @@
 extern crate geo;
 
-use connected_components::strongly_connected_components;
-use geo_utils::Location;
+use crate::connected_components::strongly_connected_components;
+use crate::geo_utils::Location;
 
 use std::collections::HashMap;
 use std::collections::hash_map;
@@ -57,7 +57,7 @@ impl RoadNetwork {
 
 
     /// Adds a node to the graph
-    pub fn add_node(&mut self, node: Node) -> Result<(), Box<Error>> {
+    pub fn add_node(&mut self, node: Node) -> Result<(), Box<dyn Error>> {
         if self.nodes.contains_key(&node.id) {
             return Err(From::from(format!("Attempted to add duplicate node {}", node.id)))
         }

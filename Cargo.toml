@@ -2,6 +2,7 @@
 name = "efficient_route_planning"
 version = "0.1.0"
 authors = ["Simon Gibbons <simongibbons@gmail.com>"]
+edition = '2018'
 
 [dependencies]
 geo = "0.7.1"

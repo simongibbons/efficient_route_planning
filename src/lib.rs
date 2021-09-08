@@ -1,4 +1,3 @@
-extern crate itertools;
 #[macro_use] extern crate serde_derive;
 
 pub mod connected_components;

@@ -1,4 +1,4 @@
-use road_network::{Cost, RoadNetwork, Node, NodeIndex};
+use crate::road_network::{Cost, RoadNetwork, Node, NodeIndex};
 
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::cmp::Ordering;

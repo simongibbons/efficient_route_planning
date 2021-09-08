@@ -1,15 +1,15 @@
 extern crate itertools;
 
-use itertools::Itertools;
+use crate::geo_utils::{earth_distance, Location};
+use crate::road_network::{RoadNetwork, Node};
+use crate::osm_reader::{Osm, OsmNode, OsmWay};
 
-use geo_utils::{earth_distance, Location};
-use road_network::{RoadNetwork, Node};
-use osm_reader::{Osm, OsmNode, OsmWay};
+use itertools::Itertools;
 
 use std::error::Error;
 
 
-pub fn build_road_network_from_osm(osm: Osm) -> Result<RoadNetwork, Box<Error>> {
+pub fn build_road_network_from_osm(osm: Osm) -> Result<RoadNetwork, Box<dyn Error>> {
     let mut network = RoadNetwork::new();
     network = add_nodes_to_network(network, &osm.nodes)?;
     network = add_ways_to_network(network, &osm.ways)?;
@@ -19,7 +19,7 @@ pub fn build_road_network_from_osm(osm: Osm) -> Result<RoadNetwork, Box<Error>> 
 
 
 fn add_nodes_to_network(mut network: RoadNetwork,
-                        nodes: &Vec<OsmNode>) -> Result<RoadNetwork, Box<Error>>  {
+                        nodes: &Vec<OsmNode>) -> Result<RoadNetwork, Box<dyn Error>>  {
     for osm_node in nodes.iter() {
         let location = Location::new(osm_node.lat, osm_node.lon);
         network.add_node(Node::new(osm_node.id, location))?;
@@ -29,7 +29,7 @@ fn add_nodes_to_network(mut network: RoadNetwork,
 
 
 fn add_ways_to_network(mut network: RoadNetwork,
-                       ways: &Vec<OsmWay>) -> Result<RoadNetwork, Box<Error>> {
+                       ways: &Vec<OsmWay>) -> Result<RoadNetwork, Box<dyn Error>> {
     for way in ways.iter() {
         network = add_way_to_network(network, &way)?;
     }
@@ -37,7 +37,7 @@ fn add_ways_to_network(mut network: RoadNetwork,
 }
 
 
-fn add_way_to_network(mut network: RoadNetwork, way: &OsmWay) -> Result<RoadNetwork, Box<Error>> {
+fn add_way_to_network(mut network: RoadNetwork, way: &OsmWay) -> Result<RoadNetwork, Box<dyn Error>> {
     let highway_type = way.highway_type();
     if highway_type.is_none() {
         return Ok(network);

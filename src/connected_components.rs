@@ -1,4 +1,4 @@
-use road_network::{RoadNetwork, NodeIndex};
+use crate::road_network::{RoadNetwork, NodeIndex};
 
 use std::collections::HashSet;
 
@@ -16,7 +16,7 @@ fn nodes_in_order(network: &RoadNetwork) -> Vec<NodeIndex> {
         network: &'a RoadNetwork,
         visited: HashSet<NodeIndex>,
         result: Vec<NodeIndex>,
-    };
+    }
 
     fn visit(node_index: NodeIndex, state: &mut State) {
         if state.visited.contains(&node_index) {

@@ -150,7 +150,7 @@ pub struct Osm {
 }
 
 
-pub fn read_osm_extract(file_name: &str) -> Result<Osm, Box<::std::error::Error>>  {
+pub fn read_osm_extract(file_name: &str) -> Result<Osm, Box<dyn (::std::error::Error)>>  {
     let f = File::open(file_name)?;
     let reader = BufReader::new(&f);
     match deserialize(reader) {
